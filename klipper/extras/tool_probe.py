@@ -76,7 +76,7 @@ class TCProbeSessionHelper(ProbeSessionHelper):
         # Register event handlers
         self.printer.register_event_handler("gcode:command_error",
                                             self._handle_command_error)
-    def run_probe(self, gcmd, skipdrop=False):
+    def run_probe(self, gcmd, check_drop=True):
         if not self.multi_probe_pending:
             self._probe_state_error()
         params = self.get_probe_params(gcmd)
@@ -89,8 +89,7 @@ class TCProbeSessionHelper(ProbeSessionHelper):
         while len(positions) < sample_count:
             # Probe position
             pos = self._probe(params['probe_speed'])
-            if not skipdrop and self.drop_first_result and first_probe:
-                first_probe = False
+            if check_drop and self.drop_first_result and first_probe:
                 gcmd.respond_info("dropping probe result, settling")
             else:
                 positions.append(pos)
@@ -102,6 +101,7 @@ class TCProbeSessionHelper(ProbeSessionHelper):
                     gcmd.respond_info("Probe samples exceed tolerance. Retrying...")
                     retries += 1
                     positions = []
+            first_probe = False
             # Retract
             if len(positions) < sample_count:
                 toolhead.manual_move(

@@ -273,10 +273,14 @@ class TCProbeCommandHelper(ProbeCommandHelper):
         # Probe bed sample_count times
         probe_session = self.probe.start_probe_session(fo_gcmd)
         probe_num = 0
+        drop = probe_session.drop_first_result
         while probe_num < sample_count:
             # Probe position
-            probe_session.run_probe(fo_gcmd, True)
-            probe_num += 1
+            probe_session.run_probe(fo_gcmd, drop)
+            if drop:
+                drop = False
+            else:
+                probe_num += 1
             # Retract
             pos = toolhead.get_position()
             liftpos = [None, None, pos[2] + params['sample_retract_dist']]
